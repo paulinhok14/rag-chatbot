@@ -12,43 +12,116 @@ from langchain.chains import LLMChain
 from langchain_community.document_loaders import CSVLoader
 
 
-def main():
+# Load environment variables
+load_dotenv()
 
-    # Load environment variables
-    load_dotenv()
+file_path = r'./src/databases/Bizuario Geral.docx'
 
-    file_path = r'./src/databases/Bizuario Geral.docx'
+# Reading "Bizuario" Word document
+# @st.cache_data()
+def read_word_document(file_path):
+    doc = Document(file_path)
+    texto = []
+    for paragrafo in doc.paragraphs:
+        texto.append(paragrafo.text)
+    return "\n".join(texto)
 
-    # Reading "Bizuario" Word document
-    # @st.cache_data()
-    def read_word_document(file_path):
-        doc = Document(file_path)
-        texto = []
-        for paragrafo in doc.paragraphs:
-            texto.append(paragrafo.text)
-        return "\n".join(texto)
 
-    # Calling read document function
-    bizuario_document = read_word_document(file_path)
+def retrieve_info(query):
+    '''
+    Function that searchs for similarity in text database (vector store) starting from query, stated by user.
+    Retrieves k Documents.
+    '''
+    similar_response = db.similarity_search(query, k=3)
+    return [doc.page_content for doc in similar_response]
 
+
+# @st.cache_resource
+def load_model():
+    '''
+    Load the Language model
+    '''
+    return pipeline("question-answering", model="distilbert-base-uncased", tokenizer="distilbert-base-uncased")
+
+# Prompt
+template = '''
+Você é um assistente virtual de uma área de materiais chamada Spare Parts Planning.
+Sua função será responder à questões genéricas feitas pelos colaboradores da área.
+Vou lhe passar um documento com diversas informações relevantes, tais como significado de siglas, telefones úteis, explicação de processos, etc, para que você use como referência para responder ao questionamento do usuário.
+
+Siga todas as regras abaixo:
+1/ Você deve buscar se comportar de maneira sempre cordial e solícita para atender aos questionamentos dos usuários.
+
+2/ Algumas linhas do documento fornecido podem conter informações irrelevantes. Preste atenção ao conteúdo útil da mensagem.
+
+3/ Existem informações pessoais dos colaboradores no documento, tais como número de telefone, evite passá-las sob quaisquer circunstâncias.
+A única informação que pode ser passada relacionada aos colaboradores é o respectivo login.
+
+4/ Em hipótese alguma envolva-se em discussões de cunho pessoal, sobre tecer opiniões sobre um colaborador ou outro. Caso a pergunta seja neste sentido, recuse-se gentilmente a opinar e ofereça ao usuário ajuda nas questões relevantes.
+
+Aqui está uma pergunta recebida de um usuário.
+{question}
+
+Aqui está o documento com as informações relevantes mencionadas.
+Esse arquivo servirá de base para que você compreenda nosso contexto de negócio, organização e nossas siglas mais comumente utilizadas.
+{bizuario_document}
+
+Escreva a melhor resposta que atende ao questionamento do usuário:
+'''
+    
+prompt = PromptTemplate(
+    input_variables=['question', 'bizuario_document'],
+    template=template
+)
+
+
+def generate_response(question):
+    '''
+    Function that takes a question made by user and returns an answer
+    '''
+    relevant_info = retrieve_info(question)
+    # Feeding LLM
+    response = chain.run(question=question, bizuario_document=bizuario_document)
+    return response
+
+# Calling read document function
+bizuario_document = read_word_document(file_path)
 
     # Embeddings object instancing
-    embeddings = OpenAIEmbeddings()
-    # Vector Store
-    db = FAISS.from_documents(bizuario_document, embeddings)
+embeddings = OpenAIEmbeddings()
+# Vector Store
+db = FAISS.from_documents(bizuario_document, embeddings)
 
-    print('chegou aqui')
-    print(bizuario_document)
+print('chegou aqui')
+print(bizuario_document)
 
-    @st.cache_resource
-    def load_model():
-        '''
-        Load the Language model
-        '''
-        return pipeline("question-answering", model="distilbert-base-uncased", tokenizer="distilbert-base-uncased")
-    
+# Querying
+retrieve_info(query='O que significa a sigla EPEP?')
 
-        
+# Instancing LLM model
+llm = load_model()
+
+# Chain
+chain = LLMChain(llm=llm, prompt=prompt)
+
+def main():
+    # Page config
+    st.set_page_config(
+        page_title="Stella.AI", page_icon=':robot_face:'
+    )
+
+    st.header('Stella.AI')
+
+    question = st.text_area('Ask me anything related to Spare Parts Planning')
+
+    # Conditional exhibiting components
+    if question:
+        st.write("Fetching response... :robot_face:")
+
+        result = generate_response(question)
+
+        st.info(result)
+
 
 if __name__ == "__main__":
     main()

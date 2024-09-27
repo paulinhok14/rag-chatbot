@@ -2,6 +2,7 @@ import streamlit as st
 from transformers import pipeline
 from dotenv import load_dotenv
 import pandas as pd
+from docx import Document
 
 from langchain.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
@@ -16,8 +17,15 @@ def main():
     # Load environment variables
     load_dotenv()
 
-    # Setup
-    databases_path = st.secrets["databases_path"]
+    file_path = r'caminho para o arquivo word em src/databases'
+
+    # Função para ler o conteúdo de um documento Word
+    def read_word_document(file_path):
+        doc = Document(file_path)
+        texto = []
+        for paragrafo in doc.paragraphs:
+            texto.append(paragrafo.text)
+        return "\n".join(texto)
 
     @st.cache_resource
     def load_model():

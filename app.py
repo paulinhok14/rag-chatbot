@@ -17,15 +17,28 @@ def main():
     # Load environment variables
     load_dotenv()
 
-    file_path = r'caminho para o arquivo word em src/databases'
+    file_path = r'./src/databases/Bizuario Geral.docx'
 
-    # Função para ler o conteúdo de um documento Word
+    # Reading "Bizuario" Word document
+    # @st.cache_data()
     def read_word_document(file_path):
         doc = Document(file_path)
         texto = []
         for paragrafo in doc.paragraphs:
             texto.append(paragrafo.text)
         return "\n".join(texto)
+
+    # Calling read document function
+    bizuario_document = read_word_document(file_path)
+
+
+    # Embeddings object instancing
+    embeddings = OpenAIEmbeddings()
+    # Vector Store
+    db = FAISS.from_documents(bizuario_document, embeddings)
+
+    print('chegou aqui')
+    print(bizuario_document)
 
     @st.cache_resource
     def load_model():
@@ -34,17 +47,8 @@ def main():
         '''
         return pipeline("question-answering", model="distilbert-base-uncased", tokenizer="distilbert-base-uncased")
     
-    # Carregar a base de dados Excel
-    @st.cache_data
-    def load_databases(file_path):
 
-        # TODO: IMPLEMENTAR LOADER PARA LER O BIZUARIO EM WORD E RESPONDER A UM QUESTIONAMENTO, TESTE. USAR LLM GRATUITA HUGGING FACE
-        try:
-            df = pd.read_excel(file_path)
-            return df
-        except Exception as e:
-            st.error(f"Erro ao carregar o arquivo Excel: {e}")
-            return None
+        
 
 if __name__ == "__main__":
     main()

@@ -24,10 +24,10 @@ file_path = os.path.join(os.path.dirname(__file__), r'src\databases\Bizuario Ger
 # @st.cache_data()
 def read_word_document(file_path):
     doc = Document(file_path)
-    texto = []
-    for paragrafo in doc.paragraphs:
-        texto.append(paragrafo.text)
-    return "\n".join(texto)
+    text = []
+    for paragraph in doc.paragraphs:
+        text.append(paragraph.text)
+    return "\n".join(text)
 
 
 def retrieve_info(query):

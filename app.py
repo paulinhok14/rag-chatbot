@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import pandas as pd
 from docx import Document
 import ollama
+from groq import Groq
 import sys
 
 from langchain_community.vectorstores import FAISS
@@ -87,16 +88,11 @@ def generate_response(question):
     response = chain.run(question=question, bizuario_document=bizuario_document)
     return response
 
-# Calling read document function
-bizuario_document = read_word_document(file_path)
 
 # # Embeddings object instancing
 # embeddings = OpenAIEmbeddings()
 # # Vector Store
 # db = FAISS.from_documents(bizuario_document, embeddings)
-
-print('chegou aqui')
-print(bizuario_document)
 
 # Querying
 #retrieve_info(query='O que significa a sigla EPEP?')
@@ -108,26 +104,62 @@ print(bizuario_document)
 #chain = LLMChain(llm=llm, prompt=prompt)
 
 def main():
-    # Page config
-    st.set_page_config(
-        page_title="Stella.AI", page_icon=':robot_face:'
-    )
+    # # Page config
+    # st.set_page_config(
+    #     page_title="Stella.AI", page_icon=':robot_face:'
+    # )
 
-    st.header('Stella.AI')
+    # st.header('Stella.AI')
 
-    question = st.text_area('Ask me anything related to Spare Parts Planning')
+    # question = st.text_area('Ask me anything related to Spare Parts Planning')
 
-    # Conditional exhibiting components
-    if question:
-        st.write("Fetching response... :robot_face:")
+    # # Conditional exhibiting components
+    # if question:
+    #     st.write("Fetching response... :robot_face:")
 
-        result = generate_response(question)
+    #     result = generate_response(question)
 
-        st.info(result)
+    #     st.info(result)
+
+    
+
+
+    # Estrutura:
+
+    '''
+    1- Gerar Base de Conhecimento. Ler word e usar modelo de Embedding (FastEmbed?) para jogar para a Vector Store db
+    2- Criar um Retriever
+    3- Instanciar um modelo LLM (modelo= llama3-8b preferencialmente? E uma API (Groq?))
+    # llm = ChatGroq(temperature=0, model_name='llama-3.1-8b-instant') -> GROQ API tem 30 milhões de tokens (muito) gratuito sem se preocupar com infra agora, plataf cloud.
+    4- Determinar prompt: system message
+    5- Criar um chain com LangChain conectando o LLM com o Retriever e o Prompt (chain_type='stuff')
+    
+    
+    '''
+
+    # 1- Create Knowledge Base
 
     # Reading doc
     doc = read_word_document(file_path)
     print(doc)
+    print('chegou aqui')
+
+
+    # # Groq API Client instancing
+    # client = Groq(
+    #     api_key=os.getenv('GROQ_API_KEY'),
+    # )
+
+
+
+
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     main()

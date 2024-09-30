@@ -1,10 +1,13 @@
 import streamlit as st
+import os
 from transformers import pipeline
 from dotenv import load_dotenv
 import pandas as pd
 from docx import Document
+import ollama
+import sys
 
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatOpenAI
@@ -15,7 +18,7 @@ from langchain_community.document_loaders import CSVLoader
 # Load environment variables
 load_dotenv()
 
-file_path = r'./src/databases/Bizuario Geral.docx'
+file_path = os.path.join(os.path.dirname(__file__), r'src\databases\Bizuario Geral.docx')
 
 # Reading "Bizuario" Word document
 # @st.cache_data()
@@ -69,10 +72,10 @@ Esse arquivo servirá de base para que você compreenda nosso contexto de negóc
 Escreva a melhor resposta que atende ao questionamento do usuário:
 '''
     
-prompt = PromptTemplate(
-    input_variables=['question', 'bizuario_document'],
-    template=template
-)
+# prompt = PromptTemplate(
+#     input_variables=['question', 'bizuario_document'],
+#     template=template
+# )
 
 
 def generate_response(question):
@@ -87,22 +90,22 @@ def generate_response(question):
 # Calling read document function
 bizuario_document = read_word_document(file_path)
 
-    # Embeddings object instancing
-embeddings = OpenAIEmbeddings()
-# Vector Store
-db = FAISS.from_documents(bizuario_document, embeddings)
+# # Embeddings object instancing
+# embeddings = OpenAIEmbeddings()
+# # Vector Store
+# db = FAISS.from_documents(bizuario_document, embeddings)
 
 print('chegou aqui')
 print(bizuario_document)
 
 # Querying
-retrieve_info(query='O que significa a sigla EPEP?')
+#retrieve_info(query='O que significa a sigla EPEP?')
 
 # Instancing LLM model
-llm = load_model()
+#llm = load_model()
 
 # Chain
-chain = LLMChain(llm=llm, prompt=prompt)
+#chain = LLMChain(llm=llm, prompt=prompt)
 
 def main():
     # Page config
@@ -122,6 +125,9 @@ def main():
 
         st.info(result)
 
+    # Reading doc
+    doc = read_word_document(file_path)
+    print(doc)
 
 if __name__ == "__main__":
     main()

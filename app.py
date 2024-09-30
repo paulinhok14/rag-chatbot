@@ -8,8 +8,8 @@ import ollama
 from groq import Groq
 import sys
 
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain.embeddings import OpenAIEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
@@ -91,8 +91,7 @@ def generate_response(question):
 
 # # Embeddings object instancing
 # embeddings = OpenAIEmbeddings()
-# # Vector Store
-# db = FAISS.from_documents(bizuario_document, embeddings)
+
 
 # Querying
 #retrieve_info(query='O que significa a sigla EPEP?')
@@ -140,9 +139,14 @@ def main():
     # 1- Create Knowledge Base
 
     # Reading doc
-    doc = read_word_document(file_path)
-    print(doc)
+    bizuario_doc = read_word_document(file_path)
+    print(bizuario_doc)
     print('chegou aqui')
+
+    # Embedding model to Vector Store transforming
+    embeddings = FastEmbedEmbeddings()
+    # Vector Store
+    db = FAISS.from_documents(bizuario_doc, embeddings)
 
 
     # # Groq API Client instancing

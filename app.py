@@ -8,28 +8,20 @@ import ollama
 from groq import Groq
 import sys
 
-from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
+from langchain_community.document_loaders import Docx2txtLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from sentence_transformers import SentenceTransformer
+# from langchain_community.embeddings.bedrock import BedrockEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.prompts import PromptTemplate
-from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
-from langchain_community.document_loaders import CSVLoader
 
+# Bottomline: AI Powered.
 
 # Load environment variables
 load_dotenv()
 
 file_path = os.path.join(os.path.dirname(__file__), r'src\databases\Bizuario Geral.docx')
-
-# Reading "Bizuario" Word document
-# @st.cache_data()
-def read_word_document(file_path):
-    doc = Document(file_path)
-    text = []
-    for paragraph in doc.paragraphs:
-        text.append(paragraph.text)
-    return "\n".join(text)
-
 
 def retrieve_info(query):
     '''
@@ -88,9 +80,19 @@ def generate_response(question):
     response = chain.run(question=question, bizuario_document=bizuario_document)
     return response
 
+def split_documents(documents: list[Document]):
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=800,
+        chunk_overlap=80,
+        length_function=len,
+        is_separator_regex=False
+    )
+    return text_splitter.split_documents(documents)
 
-# # Embeddings object instancing
-# embeddings = OpenAIEmbeddings()
+def get_embedding_function():
+    embeddings_model = SentenceTransformer('jinaai/jina-embeddings-v3')
+    return embeddings_model
+
 
 
 # Querying
@@ -139,14 +141,15 @@ def main():
     # 1- Create Knowledge Base
 
     # Reading doc
-    bizuario_doc = read_word_document(file_path)
-    print(bizuario_doc)
-    print('chegou aqui')
-
+    loader = Docx2txtLoader(file_path)
+    bizuario_doc = loader.load()
+    # Splitting text into chunks
+    chunks = split_documents(bizuario_doc)
     # Embedding model to Vector Store transforming
-    embeddings = FastEmbedEmbeddings()
+    embeddings = get_embedding_function()
     # Vector Store
-    db = FAISS.from_documents(bizuario_doc, embeddings)
+    #db = FAISS.from_documents(bizuario_doc, embeddings)
+    print(chunks[0])
 
 
     # # Groq API Client instancing

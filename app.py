@@ -89,40 +89,12 @@ def retrieve_info(query, db):
     return [doc.page_content for doc in similar_response]
 
 
-
-# Querying
-#retrieve_info(query='O que significa a sigla EPEP?')
-
-# Instancing LLM model
-#llm = load_model()
-
-# Chain
-#chain = LLMChain(llm=llm, prompt=prompt)
-
 def main():
-    # # Page config
-    # st.set_page_config(
-    #     page_title="Stella.AI", page_icon=':robot_face:'
-    # )
-
-    # st.header('Stella.AI')
-
-    # question = st.text_area('Ask me anything related to Spare Parts Planning')
-
-    # # Conditional exhibiting components
-    # if question:
-    #     st.write("Fetching response... :robot_face:")
-
-    #     result = generate_response(question)
-
-    #     st.info(result)
-
-
-    # Estrutura:
+    # Structure:
 
     '''
-    1- Gerar Base de Conhecimento. Ler word e usar modelo de Embedding para jogar para a Vector Store db
-    2- Criar um Retriever
+    1- Generate Knowledge Base. Read word doc, split document in text chunks (documents), and use Embedding model to save vectors in VectorStore
+    2- Create a Retriever that can do "Similarity Search" applying same Embedding model to user query and comparing to text vectors in VectorStore 
     3- Instanciar um modelo LLM (modelo= llama3-8b preferencialmente? E uma API (Groq?))
     # llm = ChatGroq(temperature=0, model_name='llama-3.1-8b-instant') -> GROQ API tem 30 milhões de tokens (muito) gratuito sem se preocupar com infra agora, plataf cloud.
     4- Determinar prompt: system message
@@ -142,7 +114,7 @@ def main():
     embeddings = get_embedding_function()
     # Vector Store
     db = FAISS.from_documents(chunks, embeddings)
-    # print(db)
+    print(db)
     
 
     # 2- Creating Retriever
@@ -160,12 +132,22 @@ def main():
 
 
 
+     # # Page config
+    # st.set_page_config(
+    #     page_title="Stella.AI", page_icon=':robot_face:'
+    # )
 
+    # st.header('Stella.AI')
 
+    # question = st.text_area('Ask me anything related to Spare Parts Planning')
 
+    # # Conditional exhibiting components
+    # if question:
+    #     st.write("Fetching response... :robot_face:")
 
+    #     result = generate_response(question)
 
-
+    #     st.info(result)
 
 
 if __name__ == "__main__":

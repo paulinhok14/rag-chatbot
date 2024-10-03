@@ -34,7 +34,7 @@ def load_model():
     '''
     return pipeline("question-answering", model="distilbert-base-uncased", tokenizer="distilbert-base-uncased")
 
-# Prompt
+# Prompt (System Message. Define Tasks, Tone, Behaviour and Safety params)
 template = '''
 Você é um assistente virtual de uma área de materiais chamada Spare Parts Planning.
 Sua função será responder à questões genéricas feitas pelos colaboradores da área.

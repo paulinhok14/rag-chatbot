@@ -66,11 +66,10 @@ Escreva a melhor resposta que atende ao questionamento do usuário:
 # )
 
 
-
 def split_documents(documents: list[Document]):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=80,
+        chunk_size=500,
+        chunk_overlap=100,
         length_function=len,
         is_separator_regex=False
     )
@@ -80,11 +79,6 @@ def get_embedding_function():
     #embeddings_model = SentenceTransformer('jinaai/jina-embeddings-v3')
     embeddings_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
     return embeddings_model
-
-def add_to_chroma(chunks: list[Document]):
-    #db = Chroma(
-    pass
-    #)
 
 def retrieve_info(query, db):
     '''
@@ -143,20 +137,18 @@ def main():
     bizuario_doc = loader.load()
     # Splitting text into chunks
     chunks = split_documents(bizuario_doc)
-    for chunk, i in enumerate(chunks):
-        print(f'Chunk {i}: \n{chunk}')
-    # print(chunks[0].page_content)
+    print('len chunk:', len(chunks))
     # Embedding model to Vector Store transforming
     embeddings = get_embedding_function()
     # Vector Store
-    db = FAISS.from_documents(bizuario_doc, embeddings)
+    db = FAISS.from_documents(chunks, embeddings)
     # print(db)
     
 
     # 2- Creating Retriever
     relevant_info = retrieve_info(query='O que significa a sigla EPEP?', db=db)
-    print(relevant_info)
-    for i, content in enumerate(results):
+    #print(relevant_info)
+    for i, content in enumerate(relevant_info):
         print(f"Resultado {i+1}:\n{content}\n")
 
 

@@ -7,11 +7,14 @@ from docx import Document
 import ollama
 from groq import Groq
 import sys
+import warnings
+
+warnings.filterwarnings('ignore')
 
 from langchain_community.document_loaders import Docx2txtLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from sentence_transformers import SentenceTransformer
-# from langchain_community.embeddings.bedrock import BedrockEmbeddings
+from langchain_huggingface.embeddings import HuggingFaceEmbeddings
+#from langchain.vectorstores.chroma import Chroma
 from langchain_community.vectorstores import FAISS
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
@@ -22,14 +25,6 @@ from langchain.chains import LLMChain
 load_dotenv()
 
 file_path = os.path.join(os.path.dirname(__file__), r'src\databases\Bizuario Geral.docx')
-
-def retrieve_info(query):
-    '''
-    Function that searchs for similarity in text database (vector store) starting from query, stated by user.
-    Retrieves k Documents.
-    '''
-    similar_response = db.similarity_search(query, k=3)
-    return [doc.page_content for doc in similar_response]
 
 
 # @st.cache_resource
@@ -71,14 +66,6 @@ Escreva a melhor resposta que atende ao questionamento do usuário:
 # )
 
 
-def generate_response(question):
-    '''
-    Function that takes a question made by user and returns an answer
-    '''
-    relevant_info = retrieve_info(question)
-    # Feeding LLM
-    response = chain.run(question=question, bizuario_document=bizuario_document)
-    return response
 
 def split_documents(documents: list[Document]):
     text_splitter = RecursiveCharacterTextSplitter(
@@ -90,8 +77,22 @@ def split_documents(documents: list[Document]):
     return text_splitter.split_documents(documents)
 
 def get_embedding_function():
-    embeddings_model = SentenceTransformer('jinaai/jina-embeddings-v3')
+    #embeddings_model = SentenceTransformer('jinaai/jina-embeddings-v3')
+    embeddings_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
     return embeddings_model
+
+def add_to_chroma(chunks: list[Document]):
+    #db = Chroma(
+    pass
+    #)
+
+def retrieve_info(query, db):
+    '''
+    Function that searchs for similarity in text database (vector store) starting from query, stated by user.
+    Retrieves k Documents.
+    '''
+    similar_response = db.similarity_search(query, k=3)
+    return [doc.page_content for doc in similar_response]
 
 
 
@@ -122,19 +123,16 @@ def main():
 
     #     st.info(result)
 
-    
-
 
     # Estrutura:
 
     '''
-    1- Gerar Base de Conhecimento. Ler word e usar modelo de Embedding (FastEmbed?) para jogar para a Vector Store db
+    1- Gerar Base de Conhecimento. Ler word e usar modelo de Embedding para jogar para a Vector Store db
     2- Criar um Retriever
     3- Instanciar um modelo LLM (modelo= llama3-8b preferencialmente? E uma API (Groq?))
     # llm = ChatGroq(temperature=0, model_name='llama-3.1-8b-instant') -> GROQ API tem 30 milhões de tokens (muito) gratuito sem se preocupar com infra agora, plataf cloud.
     4- Determinar prompt: system message
     5- Criar um chain com LangChain conectando o LLM com o Retriever e o Prompt (chain_type='stuff')
-    
     
     '''
 
@@ -145,11 +143,21 @@ def main():
     bizuario_doc = loader.load()
     # Splitting text into chunks
     chunks = split_documents(bizuario_doc)
+    for chunk, i in enumerate(chunks):
+        print(f'Chunk {i}: \n{chunk}')
+    # print(chunks[0].page_content)
     # Embedding model to Vector Store transforming
     embeddings = get_embedding_function()
     # Vector Store
-    #db = FAISS.from_documents(bizuario_doc, embeddings)
-    print(chunks[0])
+    db = FAISS.from_documents(bizuario_doc, embeddings)
+    # print(db)
+    
+
+    # 2- Creating Retriever
+    relevant_info = retrieve_info(query='O que significa a sigla EPEP?', db=db)
+    print(relevant_info)
+    for i, content in enumerate(results):
+        print(f"Resultado {i+1}:\n{content}\n")
 
 
     # # Groq API Client instancing

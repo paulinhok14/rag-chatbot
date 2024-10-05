@@ -68,8 +68,8 @@ Escreva a melhor resposta que atende ao questionamento do usuário:
 
 def split_documents(documents: list[Document]):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=100,
+        chunk_size=300,
+        chunk_overlap=50,
         length_function=len,
         is_separator_regex=False
     )
@@ -77,7 +77,11 @@ def split_documents(documents: list[Document]):
 
 def get_embedding_function():
     #embeddings_model = SentenceTransformer('jinaai/jina-embeddings-v3')
-    embeddings_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
+    # embeddings_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
+    # embeddings_model = HuggingFaceEmbeddings(model_name="neuralmind/bert-base-portuguese-cased")
+    embeddings_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    
+
     return embeddings_model
 
 def retrieve_info(query, db):
@@ -85,8 +89,16 @@ def retrieve_info(query, db):
     Function that searchs for similarity in text database (vector store) starting from query, stated by user.
     Retrieves k Documents.
     '''
-    similar_response = db.similarity_search(query, k=3)
-    return [doc.page_content for doc in similar_response]
+    similar_response = db.similarity_search_with_score(query, k=3)
+    print(f"Query: {query}")
+    results = []
+    for doc in similar_response:
+        # score = getattr(doc, 'score', None)
+        # results.append((doc.page_content, score))
+        # print(results)
+        print(doc)
+
+    return results
 
 
 def main():
@@ -116,12 +128,11 @@ def main():
     db = FAISS.from_documents(chunks, embeddings)
     print(db)
     
-
     # 2- Creating Retriever
-    relevant_info = retrieve_info(query='O que significa a sigla EPEP?', db=db)
+    relevant_info = retrieve_info(query='O que significa EPEP?', db=db)
     #print(relevant_info)
-    for i, content in enumerate(relevant_info):
-        print(f"Resultado {i+1}:\n{content}\n")
+    # for i, content in enumerate(relevant_info):
+    #     print(f"Resultado {i+1}:\n{content}\n")
 
 
     # # Groq API Client instancing

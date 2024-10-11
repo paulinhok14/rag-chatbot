@@ -20,16 +20,33 @@ class AppMain:
         # Set the page configuration
         st.set_page_config(
             page_title='H.O.L.M.E.S.', 
-            page_icon=":male-detective:",
+            page_icon="🕵️‍♂️",
             layout='wide',
             initial_sidebar_state ='expanded'
         )
+
+        # Pages Navigation
+        chat_page = st.Page(
+            page='pages/chat_page.py',
+            title='Chat',
+            icon='💬'
+        )
+        nav = st.navigation(pages=[chat_page])
+        nav.run() 
+
+
+
+
+
+
+
+
         # Load data
         # self.data_manager.load_data()
         # self.data_manager.load_complementary_data()
 
         # Call methods to render interface parts
-        self.ui_manager.run_ui()
+        self.ui_manager.render_ui()
 
 
 

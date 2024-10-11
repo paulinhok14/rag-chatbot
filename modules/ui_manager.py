@@ -9,10 +9,11 @@ class UIManager:
         self.description = description
         
         self.logo_path = os.path.join(self.app_path, r'src\images\logo_holmes_enhanced_transp.png')
+        self.chat_page = None
+        self.about_page = None
 
-
-
-    def run_ui(self):
+        
+    def render_ui(self):
         self._set_ui_settings()
         self._show_title(self.title)
         self._show_description(self.description)
@@ -45,9 +46,25 @@ class UIManager:
     def _show_description(self, description):
         st.write(description)
 
+    #     with st.Page():
+    #         st.subheader('Ask me anything...')
+    #         # Question
+    #         message = st.text_area(label='message', label_visibility='hidden', placeholder='Ex: "O que significa a sigla EPEP?"', height=150)
+
+
+
+
+    # def _show_main_screen(self):
+    #     st.subheader('Ask me anything...')
+    #     # Question
+    #     message = st.text_area(label='message', label_visibility='hidden', placeholder='Ex: "O que significa a sigla EPEP?"', height=150)
+
+
+
+
+
+
     def _show_sidebar(self):
         with st.sidebar:
             st.image(self.logo_path, width=270)
             st.divider()
-
-            # Page navigation

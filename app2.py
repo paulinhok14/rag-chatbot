@@ -9,11 +9,10 @@ class AppMain:
     def __init__(self):
         # Initialize app state]
         self.app_path = os.path.dirname(__file__)
-        print(self.app_path)
-        self.title = ":blue[H.O.L.M.E.S.] :male-detective:"
+        self.title = "H:blue[.]O:blue[.]L:blue[.]M:blue[.]E:blue[.]S:blue[.] :male-detective:"
         self.description = 'Materials Solution AI Assistant'
         self.knowledge_base_path = os.path.join(os.path.dirname(__file__), 'association_rules.xlsx')
-        self.ui_manager = UIManager(self.app_path)
+        self.ui_manager = UIManager(self.app_path, self.title, self.description)
         # self.data_manager = DataManager(self.knowledge_base_path)
         
 
@@ -30,11 +29,8 @@ class AppMain:
         # self.data_manager.load_complementary_data()
 
         # Call methods to render interface parts
-        self.ui_manager.show_title(self.title)
-        self.ui_manager.show_description(self.description)
-        self.ui_manager.show_sidebar()
-        # self.ui_manager.show_cart()
-        # self.ui_manager.show_recommendations()
+        self.ui_manager.run_ui()
+
 
 
 if __name__ == "__main__":

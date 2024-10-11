@@ -14,7 +14,8 @@ The system is fed with several data sources in different formats: structured and
 '''
 , unsafe_allow_html=True)
 
-add_vertical_space(3)
+st.divider()
+add_vertical_space(1)
 
 st.write('For additional questions, reach me at:')
 st.markdown('**paulo.araujo@embraer.com.br**')

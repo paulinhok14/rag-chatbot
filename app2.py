@@ -1,38 +1,75 @@
 import streamlit as st
 import os
-from modules import UIManager
-#, DataManager
+
+def main():
+    # Initialize app state
+    app_path = os.path.dirname(__file__)
+    title = "H:blue[.]O:blue[.]L:blue[.]M:blue[.]E:blue[.]S:blue[.] :male-detective:"
+    logo_path = os.path.join(app_path, r'src\images\logo_holmes_enhanced_transp.png')
+
+    # Initializing Page configs
+    st.set_page_config(
+        page_title='H.O.L.M.E.S.', 
+        page_icon="🕵️‍♂️",
+        layout='wide',
+        initial_sidebar_state ='expanded'
+        )
+    st.title(title)
+   
+    # Chat Page
+    chat_page = st.Page(
+        page='pages/chat_page.py',
+        title='Chat',
+        icon='💬',
+        url_path='pages/chat_page.py',
+    )
+    # About Page
+    about_page = st.Page(
+        page='pages/about_page.py',
+        title='About',
+        icon='📝',
+        url_path='pages/about_page.py'
+    )
+
+    # Sidebar
+    with st.sidebar:
+        # Logo
+        st.image(logo_path, width=270)
+        st.divider()
+
+        # Page Linking
+        st.page_link(page=chat_page, label="Chat", icon="💬")
+        st.page_link(page=about_page, label="About", icon="📝")
+
+    # Navigation
+    nav = st.navigation(pages=[chat_page, about_page], position='hidden')
+    nav.run()
+
+    
 
 
 
-class AppMain:
-    def __init__(self):
-        # Initialize app state]
-        self.app_path = os.path.dirname(__file__)
-        self.title = "H:blue[.]O:blue[.]L:blue[.]M:blue[.]E:blue[.]S:blue[.] :male-detective:"
-        self.description = 'Materials Solution AI Assistant'
-        self.knowledge_base_path = os.path.join(os.path.dirname(__file__), 'association_rules.xlsx')
-        self.ui_manager = UIManager(self.app_path, self.title, self.description)
-        # self.data_manager = DataManager(self.knowledge_base_path)
+    # st.set_page_config(
+    #         page_title='H.O.L.M.E.S.', 
+    #         page_icon="🕵️‍♂️",
+    #         layout='wide',
+    #         initial_sidebar_state ='expanded'
+    #     )
+        
         
 
-    def run(self):
-        # Set the page configuration
-        st.set_page_config(
-            page_title='H.O.L.M.E.S.', 
-            page_icon="🕵️‍♂️",
-            layout='wide',
-            initial_sidebar_state ='expanded'
-        )
+    # def run(self):
+    #     # Set the page configuration
+        
 
-        # Pages Navigation
-        chat_page = st.Page(
-            page='pages/chat_page.py',
-            title='Chat',
-            icon='💬'
-        )
-        nav = st.navigation(pages=[chat_page])
-        nav.run() 
+    #     # Pages Navigation
+    #     chat_page = st.Page(
+    #         page='pages/chat_page.py',
+    #         title='Chat',
+    #         icon='💬'
+    #     )
+    #     nav = st.navigation(pages=[chat_page])
+    #     nav.run() 
 
 
 
@@ -46,10 +83,9 @@ class AppMain:
         # self.data_manager.load_complementary_data()
 
         # Call methods to render interface parts
-        self.ui_manager.render_ui()
+        # self.ui_manager.render_ui()
 
 
 
 if __name__ == "__main__":
-    app = AppMain()
-    app.run()
+   main()

@@ -45,39 +45,6 @@ def main():
     nav = st.navigation(pages=[chat_page, about_page], position='hidden')
     nav.run()
 
-    
-
-
-
-    # st.set_page_config(
-    #         page_title='H.O.L.M.E.S.', 
-    #         page_icon="🕵️‍♂️",
-    #         layout='wide',
-    #         initial_sidebar_state ='expanded'
-    #     )
-        
-        
-
-    # def run(self):
-    #     # Set the page configuration
-        
-
-    #     # Pages Navigation
-    #     chat_page = st.Page(
-    #         page='pages/chat_page.py',
-    #         title='Chat',
-    #         icon='💬'
-    #     )
-    #     nav = st.navigation(pages=[chat_page])
-    #     nav.run() 
-
-
-
-
-
-
-
-
         # Load data
         # self.data_manager.load_data()
         # self.data_manager.load_complementary_data()

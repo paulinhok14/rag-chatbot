@@ -7,6 +7,8 @@ from langchain_community.document_loaders import Docx2txtLoader
 from langchain_community.llms import Ollama
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import DocArrayInMemorySearch # Get a better solution instead of saving in memory. At first, works.
+from langchain_community.vectorstores import FAISS
+import faiss
 from langchain.prompts import PromptTemplate
 from operator import itemgetter
 
@@ -16,13 +18,35 @@ MODEL = 'llama3.2'
 model = Ollama(model=MODEL)
 embeddings = OllamaEmbeddings(model=MODEL)
 
-# Knowledge Base
+# FAISS index path
+faiss_index_path = os.path.join(os.getcwd(), 'src', 'databases', 'faiss_index')
+# Knowledge Base path
 bizuario_doc_path = os.path.join(os.getcwd(), r'src\databases\Bizuario Geral.docx')
-# Reading file as documents
-loader = Docx2txtLoader(bizuario_doc_path)
-bizuario_doc = loader.load_and_split()
-# Starting VectorStore
-vectorstore = DocArrayInMemorySearch.from_documents(bizuario_doc, embedding=embeddings)
+
+# Function to load FAISS vectorstore database if it exists, or create a new one based on Bizuario doc
+def load_or_create_faiss_index():
+    if os.path.exists(faiss_index_path):
+        # Load existing FAISS index
+        return FAISS.load_local(faiss_index_path, embeddings)
+    else:
+        # Create Knowledge Base with FAISS
+        loader = Docx2txtLoader(bizuario_doc_path)
+        docs = loader.load_and_split()
+        vectorstore = FAISS.from_documents(docs, embeddings)
+        vectorstore.save_local(faiss_index_path)
+        return vectorstore
+
+
+# Starting vectorstore (Loading Knowledge Base data) and Retriever
+vectorstore = load_or_create_faiss_index()
+retriever = vectorstore.as_retriever()
+
+
+# # Reading file as documents
+# loader = Docx2txtLoader(bizuario_doc_path)
+# bizuario_doc = loader.load_and_split()
+# # Starting VectorStore
+# vectorstore = DocArrayInMemorySearch.from_documents(bizuario_doc, embedding=embeddings)
 # Retriever
 retriever = vectorstore.as_retriever()
 
@@ -102,11 +126,34 @@ question = st.text_area(label='message', label_visibility='hidden', placeholder=
 
 # Chat components
 if question:
-      answer_space = st.empty()
+    answer_space = st.empty()
     #   while True: # Create condition in which the response is already generated so the loop should stop
     #     answer_space.write_stream(stream_text("Investigating for answers. Please wait... :male-detective:"))
     #     time.sleep(2)
 
-      result = generate_response(question)
+    result = generate_response(question)
+    st.info(result)
 
-      st.info(result)
+    # Mock questions
+    questions = [
+        'O que significa a sigla EPEP?',
+        'O que faz a transação ME22N?',
+        'Qual transação posso usar para modificar a Ordem de Cliente (OV/SO)?',
+        'O que significa APU?',
+        'Quais são os processos P3E?',
+        'Qual é o ramal do Diego Sodre?',
+        'Qual é a chapa do Diego Sodre?',
+        'Qual é o ramal do ambulatório?',
+        'Quais são algumas das regras para uma boa convivência com os  colegas?',
+        'Por que eu devo evitar fazer críticas em público?'
+    ]
+
+    for question in questions:
+        resposta = generate_response(question)
+        st.info('Question:\n'+question)
+        print('\n')
+        st.info('Answer:\n'+resposta)
+        print('\n')
+
+
+    

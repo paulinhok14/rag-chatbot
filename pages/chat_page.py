@@ -74,22 +74,31 @@ prompt = PromptTemplate.from_template(template)
 
 
 def generate_response(question):
-      # Creating and invoking Chain    
-      chain = (
-           {
-                'context': itemgetter('question') | retriever, # the context will come from a retriever (relevant docs), given a question
-                'question': itemgetter('question')
-           }
-           | prompt
-           | model
-      )
+    print('Question: ', question)
+    print('\n')
+    relevant_content = retriever.invoke(question)
+    print('Relevant content: \n\n', relevant_content)
+    print('\n')
+    print('Generated prompt: \n\n', prompt.format(question=question, context=relevant_content))
+    print('\n')
+    
 
-      answer = chain.invoke({'question': question})
-      return answer
+    # Creating and invoking Chain    
+    chain = (
+        {
+            'context': itemgetter('question') | retriever, # the context will come from a retriever (relevant docs), given a question
+            'question': itemgetter('question')
+        }
+        | prompt
+        | model
+    )
+
+    answer = chain.invoke({'question': question})
+    return answer
 
 
 # Question
-question = st.text_area(label='message', label_visibility='hidden', placeholder='Ex: "O que significa a sigla EPEP?"', height=150)
+question = st.text_area(label='message', label_visibility='hidden', placeholder='Ex: "O que significa a sigla EPEP?"', height=150, help='Press Ctrl+Enter to send question')
 
 # Chat components
 if question:
@@ -101,22 +110,3 @@ if question:
       result = generate_response(question)
 
       st.info(result)
-
-    
-
-# Stylable Container to CSS styles and tricky columns to align button to right
-_, col = st.columns([10, 1])
-with col:
-    with stylable_container(
-            key="send_button",
-            css_styles="""
-                button {
-                    background-color: blue;
-                    color: white;
-                    border-radius: 20px;
-                    display: flex;
-                    justify-content: flex-end;
-                }
-                """,
-        ):
-            st.button("Send")

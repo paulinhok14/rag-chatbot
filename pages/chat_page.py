@@ -1,6 +1,7 @@
 import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 import os
+import numpy as np
 import time
 
 from langchain_community.document_loaders import Docx2txtLoader
@@ -8,9 +9,13 @@ from langchain_community.llms import Ollama
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import DocArrayInMemorySearch # Get a better solution instead of saving in memory. At first, works.
 from langchain_community.vectorstores import FAISS
+from langchain_community.docstore.in_memory import InMemoryDocstore
 import faiss
 from langchain.prompts import PromptTemplate
 from operator import itemgetter
+
+# To deal with error #15 initializing FAISS parallelism: 'Initializing libomp140.x86_64.dll, but found libiomp5md.dll'
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 # Model instancing
 MODEL = 'llama3.2'
@@ -27,19 +32,52 @@ bizuario_doc_path = os.path.join(os.getcwd(), r'src\databases\Bizuario Geral.doc
 def load_or_create_faiss_index():
     if os.path.exists(faiss_index_path):
         # Load existing FAISS index
-        return FAISS.load_local(faiss_index_path, embeddings)
+        return FAISS.load_local(faiss_index_path, embeddings, allow_dangerous_deserialization=True) # Attention to allow_dangerous_deserialization prm, only trusted sources.
     else:
         # Create Knowledge Base with FAISS
         loader = Docx2txtLoader(bizuario_doc_path)
         docs = loader.load_and_split()
-        vectorstore = FAISS.from_documents(docs, embeddings)
+        # Generating embeddings for all documents
+        doc_embeddings = [embeddings.embed_query(doc.page_content) for doc in docs]
+        # Initializing FAISS index
+        dimension = len(doc_embeddings[0])
+        print('dimension', dimension)# Printing doc embeddings dimension
+        print('len doc_embeddings', len(doc_embeddings))
+        index = faiss.IndexFlatL2(dimension)
+        # Adding embeddings to index
+        index.add(np.array(doc_embeddings))
+        print('index:', index)
+        # Creating docstore and IDs mapping
+        docstore = InMemoryDocstore({str(i): doc for i, doc in enumerate(docs)})
+        index_to_docstore_id = {i: str(i) for i in range(len(docs))}
+        # Creating FAISS vectorstore
+        vectorstore = FAISS(
+            embedding_function=embeddings,
+            index=index,
+            docstore=docstore,
+            index_to_docstore_id=index_to_docstore_id,
+        )
+        # Saving vectorstore in disk
         vectorstore.save_local(faiss_index_path)
+
+        # Suggested implementation by model
+        # vectorstore = FAISS.from_documents(docs, embeddings)
+        # vectorstore.save_local(faiss_index_path)
+
+
         return vectorstore
 
 
-# Starting vectorstore (Loading Knowledge Base data) and Retriever
+# Starting vectorstore (Loading Knowledge Base data)
 vectorstore = load_or_create_faiss_index()
-retriever = vectorstore.as_retriever()
+# Retriever and respective parameters
+retriever = vectorstore.as_retriever(
+    #search_type="mmr",
+    search_kwargs={"k": 3, "lambda_mult": 0.5},
+    # search_kwargs={"k": 3, "fetch_k": 2, "lambda_mult": 0.5},
+    # The Retriever can perform “similarity” (default), “mmr”, or “similarity_score_threshold”. Test them all.
+
+)
 
 
 # # Reading file as documents
@@ -48,7 +86,6 @@ retriever = vectorstore.as_retriever()
 # # Starting VectorStore
 # vectorstore = DocArrayInMemorySearch.from_documents(bizuario_doc, embedding=embeddings)
 # Retriever
-retriever = vectorstore.as_retriever()
 
 # Initialize Page state
 description = 'Materials Solution AI Assistant'

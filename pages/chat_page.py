@@ -5,6 +5,7 @@ import numpy as np
 import time
 
 from langchain_community.document_loaders import Docx2txtLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.llms import Ollama
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import DocArrayInMemorySearch # Get a better solution instead of saving in memory. At first, works.
@@ -28,6 +29,15 @@ faiss_index_path = os.path.join(os.getcwd(), 'src', 'databases', 'faiss_index')
 # Knowledge Base path
 bizuario_doc_path = os.path.join(os.getcwd(), r'src\databases\Bizuario Geral.docx')
 
+def split_documents(documents):
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=300,
+        chunk_overlap=50,
+        length_function=len,
+        is_separator_regex=False
+    )
+    return text_splitter.split_documents(documents)
+
 # Function to load FAISS vectorstore database if it exists, or create a new one based on Bizuario doc
 def load_or_create_faiss_index():
     if os.path.exists(faiss_index_path):
@@ -37,19 +47,21 @@ def load_or_create_faiss_index():
         # Create Knowledge Base with FAISS
         loader = Docx2txtLoader(bizuario_doc_path)
         docs = loader.load_and_split()
+        # Splitting text into chunks (each document is a page, so chunks has to be smaller in order to provide a more specific context to LLM model)
+        chunks = split_documents(docs)
         # Generating embeddings for all documents
-        doc_embeddings = [embeddings.embed_query(doc.page_content) for doc in docs]
+        chunks_embeddings = [embeddings.embed_query(chunk.page_content) for chunk in chunks]
         # Initializing FAISS index
-        dimension = len(doc_embeddings[0])
-        print('dimension', dimension)# Printing doc embeddings dimension
-        print('len doc_embeddings', len(doc_embeddings))
+        dimension = len(chunks_embeddings[0])
+        print('dimension', dimension)# Printing chunk embeddings dimension
+        print('len chunks_embeddings', len(chunks_embeddings))
         index = faiss.IndexFlatL2(dimension)
         # Adding embeddings to index
-        index.add(np.array(doc_embeddings))
+        index.add(np.array(chunks_embeddings))
         print('index:', index)
         # Creating docstore and IDs mapping
-        docstore = InMemoryDocstore({str(i): doc for i, doc in enumerate(docs)})
-        index_to_docstore_id = {i: str(i) for i in range(len(docs))}
+        docstore = InMemoryDocstore({str(i): chunk for i, chunk in enumerate(chunks)})
+        index_to_docstore_id = {i: str(i) for i in range(len(chunks))}
         # Creating FAISS vectorstore
         vectorstore = FAISS(
             embedding_function=embeddings,
@@ -59,11 +71,6 @@ def load_or_create_faiss_index():
         )
         # Saving vectorstore in disk
         vectorstore.save_local(faiss_index_path)
-
-        # Suggested implementation by model
-        # vectorstore = FAISS.from_documents(docs, embeddings)
-        # vectorstore.save_local(faiss_index_path)
-
 
         return vectorstore
 
@@ -79,14 +86,6 @@ retriever = vectorstore.as_retriever(
 
 )
 
-
-# # Reading file as documents
-# loader = Docx2txtLoader(bizuario_doc_path)
-# bizuario_doc = loader.load_and_split()
-# # Starting VectorStore
-# vectorstore = DocArrayInMemorySearch.from_documents(bizuario_doc, embedding=embeddings)
-# Retriever
-
 # Initialize Page state
 description = 'Materials Solution AI Assistant'
 knowledge_base_path = os.path.join(os.path.dirname(__file__), 'association_rules.xlsx')
@@ -95,13 +94,13 @@ knowledge_base_path = os.path.join(os.path.dirname(__file__), 'association_rules
 st.write(description)
 st.subheader('Ask me anything...')
 
-def stream_text(text):
+def stream_text(text, delay=0.04):
     '''
     Function that takes a text as a String and returns a stream generator in order to be displayed with st.write_stream()
     '''
     for word in text.split(" "):
         yield word + " "
-        time.sleep(0.04)
+        time.sleep(delay)
 
 
 # Prompt (System Message. Define Tasks, Tone, Behaviour and Safety params)
@@ -128,7 +127,7 @@ Aqui está o documento com as informações relevantes mencionadas.
 Esse arquivo servirá de base para que você compreenda nosso contexto de negócio, organização e nossas siglas mais comumente utilizadas:
 {context}
 
-Escreva a melhor resposta que atende ao questionamento do usuário:
+Escreva a melhor resposta que atende ao questionamento do usuário.
 '''
 
 prompt = PromptTemplate.from_template(template)
@@ -140,7 +139,7 @@ def generate_response(question):
     relevant_content = retriever.invoke(question)
     print('Relevant content: \n\n', relevant_content)
     print('\n')
-    print('Generated prompt: \n\n', prompt.format(question=question, context=relevant_content))
+    #print('Generated prompt: \n\n', prompt.format(question=question, context=relevant_content))
     print('\n')
     
 
@@ -157,11 +156,27 @@ def generate_response(question):
     answer = chain.invoke({'question': question})
     return answer
 
+# Chat Components
+# def capitalize_first_word():
+#     '''
+#     This is a callback function that checks if the word being written on Chat st.text_area() is the first word, and if so, capitalizes it.
+#     '''
+#     text = st.session_state['question-input']
+
+#     if text and text[0].islower():
+#         # Updates text by session_state with the first word capitalized
+#         st.session_state['question-input'] = text[0].upper() + text[1:]
 
 # Question
-question = st.text_area(label='message', label_visibility='hidden', placeholder='Ex: "O que significa a sigla EPEP?"', height=150, help='Press Ctrl+Enter to send question')
+question = st.text_area(label='question', 
+                        label_visibility='hidden', 
+                        placeholder='Ex: "O que significa a sigla EPEP?"', 
+                        height=150, 
+                        help='Press Ctrl+Enter to send question',
+                        key='question-input'
+                        )
 
-# Chat components
+# Answer space
 if question:
     answer_space = st.empty()
     #   while True: # Create condition in which the response is already generated so the loop should stop
@@ -185,12 +200,12 @@ if question:
         'Por que eu devo evitar fazer críticas em público?'
     ]
 
-    for question in questions:
-        resposta = generate_response(question)
-        st.info('Question:\n'+question)
-        print('\n')
-        st.info('Answer:\n'+resposta)
-        print('\n')
+    # for question in questions:
+    #     resposta = generate_response(question)
+    #     st.info('Question:\n'+question)
+    #     print('\n')
+    #     st.info('Answer:\n'+resposta)
+    #     print('\n')
 
 
     

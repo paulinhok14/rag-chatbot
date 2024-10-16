@@ -8,6 +8,7 @@
 
 
 <br>
+
 The purpose of developing **H.O.L.M.E.S.** was based on a challenge inherent to  different business areas of a company, namely to have a "source of truth" where different types of information, technical or otherwise, can be consulted.
 
 Using the principles of a **RAG (Retrieval-Augmented Generation)** software architecture, which combines generative neural network models with Documents that provide specific context, the system is capable of:
@@ -54,7 +55,7 @@ Accessed via the sidebar is the **About** page that describes how the system wor
 
 ![holmes about page](docs/2_holmes_about.png)
 
-Below you can see an example of a business-relevant question being made by an user (regarding APU component), and after a while investigating in knowledge base, H.O.L.M.E.S. returns a correct answer, adding cordial and caring words to the relevant answer.
+Below you can see an example of a business-relevant question being made by an user (regarding APU component), and after a while investigating in knowledge base, **H.O.L.M.E.S.** returns a correct answer, adding cordial and caring words to the relevant answer.
 
 ![holmes answering](docs/4_holmes_at_work.png)
 

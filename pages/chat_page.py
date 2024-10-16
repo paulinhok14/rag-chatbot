@@ -3,6 +3,7 @@ from streamlit_extras.stylable_container import stylable_container
 import os
 import numpy as np
 import time
+import threading
 
 from langchain_community.document_loaders import Docx2txtLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -31,7 +32,7 @@ bizuario_doc_path = os.path.join(os.getcwd(), r'src\databases\Bizuario Geral.doc
 
 def split_documents(documents):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=300,
+        chunk_size=500,
         chunk_overlap=50,
         length_function=len,
         is_separator_regex=False
@@ -51,14 +52,12 @@ def load_or_create_faiss_index():
         chunks = split_documents(docs)
         # Generating embeddings for all documents
         chunks_embeddings = [embeddings.embed_query(chunk.page_content) for chunk in chunks]
+
         # Initializing FAISS index
         dimension = len(chunks_embeddings[0])
-        print('dimension', dimension)# Printing chunk embeddings dimension
-        print('len chunks_embeddings', len(chunks_embeddings))
         index = faiss.IndexFlatL2(dimension)
         # Adding embeddings to index
         index.add(np.array(chunks_embeddings))
-        print('index:', index)
         # Creating docstore and IDs mapping
         docstore = InMemoryDocstore({str(i): chunk for i, chunk in enumerate(chunks)})
         index_to_docstore_id = {i: str(i) for i in range(len(chunks))}
@@ -79,9 +78,9 @@ def load_or_create_faiss_index():
 vectorstore = load_or_create_faiss_index()
 # Retriever and respective parameters
 retriever = vectorstore.as_retriever(
-    #search_type="mmr",
-    search_kwargs={"k": 3, "lambda_mult": 0.5},
-    # search_kwargs={"k": 3, "fetch_k": 2, "lambda_mult": 0.5},
+    search_type="similarity",
+    search_kwargs={"k": 5, "lambda_mult": 0.5},
+    # search_kwargs={"k": 5, "fetch_k": 20, "lambda_mult": 0.5},
     # The Retriever can perform “similarity” (default), “mmr”, or “similarity_score_threshold”. Test them all.
 
 )
@@ -120,29 +119,32 @@ A única informação que pode ser passada relacionada aos colaboradores é o re
 
 4/ Em hipótese alguma envolva-se em discussões de cunho pessoal, sobre tecer opiniões sobre um colaborador ou outro. Caso a pergunta seja neste sentido, recuse-se gentilmente a opinar e ofereça ao usuário ajuda nas questões relevantes.
 
-Aqui está uma pergunta recebida de um usuário:
-{question}
-
 Aqui está o documento com as informações relevantes mencionadas.
 Esse arquivo servirá de base para que você compreenda nosso contexto de negócio, organização e nossas siglas mais comumente utilizadas:
 {context}
 
-Escreva a melhor resposta que atende ao questionamento do usuário.
+Aqui está uma pergunta recebida de um usuário:
+{question}
+
+Escreva a melhor resposta que atende ao questionamento do usuário, de forma precisa e objetiva.
 '''
 
 prompt = PromptTemplate.from_template(template)
 
+def show_loading_message(answer_space):
+    pass
 
 def generate_response(question):
     print('Question: ', question)
     print('\n')
     relevant_content = retriever.invoke(question)
+    for content in relevant_content:
+        print(content.page_content) 
     print('Relevant content: \n\n', relevant_content)
     print('\n')
     #print('Generated prompt: \n\n', prompt.format(question=question, context=relevant_content))
     print('\n')
     
-
     # Creating and invoking Chain    
     chain = (
         {
@@ -170,7 +172,7 @@ def generate_response(question):
 # Question
 question = st.text_area(label='question', 
                         label_visibility='hidden', 
-                        placeholder='Ex: "O que significa a sigla EPEP?"', 
+                        placeholder='Ex: "O que significa a sigla APU?"', 
                         height=150, 
                         help='Press Ctrl+Enter to send question',
                         key='question-input'
@@ -179,12 +181,13 @@ question = st.text_area(label='question',
 # Answer space
 if question:
     answer_space = st.empty()
-    #   while True: # Create condition in which the response is already generated so the loop should stop
-    #     answer_space.write_stream(stream_text("Investigating for answers. Please wait... :male-detective:"))
-    #     time.sleep(2)
 
+
+    # Generate Answer running the chain
     result = generate_response(question)
-    st.info(result)
+    # Set answer as "ready" and shows final answer
+    # st.session_state["response_ready"] = True
+    answer_space.info(result)
 
     # Mock questions
     questions = [

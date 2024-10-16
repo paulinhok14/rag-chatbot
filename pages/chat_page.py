@@ -31,6 +31,9 @@ faiss_index_path = os.path.join(os.getcwd(), 'src', 'databases', 'faiss_index')
 bizuario_doc_path = os.path.join(os.getcwd(), r'src\databases\Bizuario Geral.docx')
 
 def split_documents(documents):
+    '''
+    Splits documents in smaller chunks of text, in order to pass to LLM more specific context
+    '''
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=500,
         chunk_overlap=50,
@@ -209,6 +212,3 @@ if question:
     #     print('\n')
     #     st.info('Answer:\n'+resposta)
     #     print('\n')
-
-
-    

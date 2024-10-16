@@ -45,14 +45,6 @@ def main():
     nav = st.navigation(pages=[chat_page, about_page], position='hidden')
     nav.run()
 
-        # Load data
-        # self.data_manager.load_data()
-        # self.data_manager.load_complementary_data()
-
-        # Call methods to render interface parts
-        # self.ui_manager.render_ui()
-
-
 
 if __name__ == "__main__":
    main()

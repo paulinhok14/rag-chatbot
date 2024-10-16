@@ -37,12 +37,19 @@ Initially, the choice was made for **free open-source LLM models** running local
 **Host: Ollama (Local)**<br>
 **LLM: llama3.2 (Meta)**<br>
 **Embeddings: llama3.2 (Meta)**<br>
-**Vector Store: FAISS - Facebook AI Similarity Search (Meta)**
+**Vector Store: FAISS - Facebook AI Similarity Search (Meta)**<br><br>
+
+The system's **huge scalability potential** lies in the simplicity of changing and improving the structure to use **more robust models** (such as GPT-4, Gemini, etc.) by investing amounts that may be insignificant compared to the potential return, **adding different supported knowledge base formats**: **PDF, Word, SharePoint, XML, TXT documents, databases**, in addition to directly benefiting from the **natural evolution of open-source LLM/Chat models**.
+
+All this while maintaining a cohesive structure (LangChain) connected to the system's main objectives.
 
 The system's user interface runs on a web application and once the address is accessed, the server will respond by directing to H.O.L.M.E.S. main page, the **Chat** page:
 
 ![holmes chat page](docs/1_holmes_chat.png)
 
+Accessed via the sidebar is the **About** page that describes how the system works and its structure.
+
+![holmes about page](docs/2_holmes_about.png)
 
 ---
 ###### *© Paulo Roberto de Sá Araújo, 2024*

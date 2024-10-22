@@ -22,8 +22,8 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 # Model instancing
 MODEL = 'llama3.2'
 # MODEL = 'llama2:7b-chat'
-model = Ollama(model=MODEL)
-embeddings = OllamaEmbeddings(model=MODEL)
+# model = Ollama(model=MODEL)
+# embeddings = OllamaEmbeddings(model=MODEL)
 
 # FAISS index path
 faiss_index_path = os.path.join(os.getcwd(), 'src', 'databases', 'faiss_index')
@@ -78,15 +78,15 @@ def load_or_create_faiss_index():
 
 
 # Starting vectorstore (Loading Knowledge Base data)
-vectorstore = load_or_create_faiss_index()
-# Retriever and respective parameters
-retriever = vectorstore.as_retriever(
-    search_type="similarity",
-    search_kwargs={"k": 5, "lambda_mult": 0.5},
-    # search_kwargs={"k": 5, "fetch_k": 20, "lambda_mult": 0.5},
-    # The Retriever can perform “similarity” (default), “mmr”, or “similarity_score_threshold”. Test them all.
+# vectorstore = load_or_create_faiss_index()
+# # Retriever and respective parameters
+# retriever = vectorstore.as_retriever(
+#     search_type="similarity",
+#     search_kwargs={"k": 5, "lambda_mult": 0.5},
+#     # search_kwargs={"k": 5, "fetch_k": 20, "lambda_mult": 0.5},
+#     # The Retriever can perform “similarity” (default), “mmr”, or “similarity_score_threshold”. Test them all.
 
-)
+# )
 
 # Initialize Page state
 description = 'Materials Solution AI Assistant'
@@ -161,7 +161,34 @@ def generate_response(question):
     answer = chain.invoke({'question': question})
     return answer
 
+def generate_fake_response(question):
+    empty = st.empty()
+    with empty.container():
+
+        with st.status('Generating response...', expanded=False) as status:
+
+            time.sleep(5)
+            fake_answer = 'Resposta Gerada Após o Processamento do Modelo'
+            status.update(
+                label='Response Generated!', state='complete', expanded=None
+            )
+    empty.empty()
+
+    for word in fake_answer.split():
+        yield word + " "
+        time.sleep(0.05)
+
 # Chat Components
+
+# Initialize chat history
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
+
+# Display chat messages from history on app rerun
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
 # def capitalize_first_word():
 #     '''
 #     This is a callback function that checks if the word being written on Chat st.text_area() is the first word, and if so, capitalizes it.
@@ -173,24 +200,45 @@ def generate_response(question):
 #         st.session_state['question-input'] = text[0].upper() + text[1:]
 
 # Question
-question = st.text_area(label='question', 
-                        label_visibility='hidden', 
-                        placeholder='Ex: "O que significa a sigla APU?"', 
-                        height=150, 
-                        help='Press Ctrl+Enter to send question',
-                        key='question-input'
-                        )
+# question = st.text_area(label='question', 
+#                         label_visibility='hidden', 
+#                         placeholder='Ex: "O que significa a sigla APU?"', 
+#                         height=150, 
+#                         help='Press Ctrl+Enter to send question',
+#                         key='question-input'
+#                         )
+
+# Reacting to user input (question)
+if question := st.chat_input(placeholder='Ex: "O que significa a sigla APU?"', max_chars=2000):
+    # Display user message in chat message container
+    # with st.chat_message('user'):
+    #     st.markdown(question)
+    st.chat_message(name='user', avatar='👨‍💼').markdown(question)
+    # Add user message to chat history
+    st.session_state.messages.append({'role': 'user', 'content': question})
+
+    # Generating response streaming words
+    #result = st.write_stream(generate_fake_response(question))
+
+    # Display H.O.L.M.E.S. response in chat_message container
+    # st.chat_message(name='assistant', avatar='🕵️‍♂️').markdown(result)
+    with st.chat_message(name='assistant', avatar='🕵️‍♂️'):
+        result = st.write_stream(generate_fake_response(question))
+    # Add H.O.L.M.E.S. response to chat history
+    st.session_state.messages.append({'role': 'assistant', 'content': result})
+    
 
 # Answer space
 if question:
     answer_space = st.empty()
 
-
+    
     # Generate Answer running the chain
-    result = generate_response(question)
+    # result = generate_response(question)
+    # result = generate_fake_response(question)
     # Set answer as "ready" and shows final answer
     # st.session_state["response_ready"] = True
-    answer_space.info(result)
+    #answer_space.info(result)
 
     # Mock questions
     questions = [

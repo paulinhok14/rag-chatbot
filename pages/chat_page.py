@@ -1,15 +1,12 @@
 import streamlit as st
-from streamlit_extras.stylable_container import stylable_container
 import os
 import numpy as np
 import time
-import threading
 
 from langchain_community.document_loaders import Docx2txtLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.llms import Ollama
 from langchain_community.embeddings import OllamaEmbeddings
-from langchain_community.vectorstores import DocArrayInMemorySearch # Get a better solution instead of saving in memory. At first, works.
 from langchain_community.vectorstores import FAISS
 from langchain_community.docstore.in_memory import InMemoryDocstore
 import faiss
@@ -22,8 +19,8 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 # Model instancing
 MODEL = 'llama3.2'
 # MODEL = 'llama2:7b-chat'
-# model = Ollama(model=MODEL)
-# embeddings = OllamaEmbeddings(model=MODEL)
+model = Ollama(model=MODEL)
+embeddings = OllamaEmbeddings(model=MODEL)
 
 # FAISS index path
 faiss_index_path = os.path.join(os.getcwd(), 'src', 'databases', 'faiss_index')
@@ -78,15 +75,12 @@ def load_or_create_faiss_index():
 
 
 # Starting vectorstore (Loading Knowledge Base data)
-# vectorstore = load_or_create_faiss_index()
-# # Retriever and respective parameters
-# retriever = vectorstore.as_retriever(
-#     search_type="similarity",
-#     search_kwargs={"k": 5, "lambda_mult": 0.5},
-#     # search_kwargs={"k": 5, "fetch_k": 20, "lambda_mult": 0.5},
-#     # The Retriever can perform “similarity” (default), “mmr”, or “similarity_score_threshold”. Test them all.
-
-# )
+vectorstore = load_or_create_faiss_index()
+# Retriever and respective parameters
+retriever = vectorstore.as_retriever(
+    search_type="similarity",
+    search_kwargs={"k": 5, "lambda_mult": 0.5},
+)
 
 # Initialize Page state
 description = 'Materials Solution AI Assistant'
@@ -134,32 +128,44 @@ Escreva a melhor resposta que atende ao questionamento do usuário, de forma pre
 
 prompt = PromptTemplate.from_template(template)
 
-def show_loading_message(answer_space):
-    pass
-
 def generate_response(question):
-    print('Question: ', question)
-    print('\n')
-    relevant_content = retriever.invoke(question)
-    for content in relevant_content:
-        print(content.page_content) 
-    print('Relevant content: \n\n', relevant_content)
-    print('\n')
-    #print('Generated prompt: \n\n', prompt.format(question=question, context=relevant_content))
-    print('\n')
-    
-    # Creating and invoking Chain    
-    chain = (
-        {
-            'context': itemgetter('question') | retriever, # the context will come from a retriever (relevant docs), given a question
-            'question': itemgetter('question')
-        }
-        | prompt
-        | model
-    )
+    '''
+    Function that takes a question, retrieves relevant documents and generates a response
+    '''
 
-    answer = chain.invoke({'question': question})
-    return answer
+    with st.spinner('Investigating for answers... 🔎'):
+        print('Question: ', question)
+        print('\n')
+        relevant_content = retriever.invoke(question)
+        for i, content in enumerate(relevant_content):
+            print(f'{i+1}: \n', content.page_content)
+            print('\n')
+        print('\n')
+        #print('Generated prompt: \n\n', prompt.format(question=question, context=relevant_content))
+        
+        # Creating and invoking Chain    
+        chain = (
+            {
+                'context': itemgetter('question') | retriever, # the context will come from a retriever (relevant docs), given a question
+                'question': itemgetter('question')
+            }
+            | prompt
+            | model
+        )
+
+        answer = chain.invoke({'question': question})
+    # return answer
+    print('answer:\n', answer)
+    # Generating write stream respecting line breaks
+    # for word in answer.split():
+    #     yield word + " "
+    #     time.sleep(0.05)
+    for line in answer.split('\n'):
+        for word in line.split():
+            yield word + ' '
+            time.sleep(0.05)
+        yield '\n'  # Adds a break after each line
+        time.sleep(0.1)
 
 def generate_fake_response(question):
     empty_space = st.empty()
@@ -184,10 +190,6 @@ def generate_fake_response(question):
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 
-# Messages history container
-#chat_history = st.container(height=200, border=False)
-
-#with chat_history:
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
     with st.chat_message(name=message["role"], avatar=message['avatar']):
@@ -203,31 +205,18 @@ for message in st.session_state.messages:
 #         # Updates text by session_state with the first word capitalized
 #         st.session_state['question-input'] = text[0].upper() + text[1:]
 
-# Question
-# question = st.text_area(label='question', 
-#                         label_visibility='hidden', 
-#                         placeholder='Ex: "O que significa a sigla APU?"', 
-#                         height=150, 
-#                         help='Press Ctrl+Enter to send question',
-#                         key='question-input'
-#                         )
 
 # Reacting to user input (question)
 if question := st.chat_input(placeholder='Ex: "O que significa a sigla APU?"', max_chars=2000):
-    # Display user message in chat message container
-    # with st.chat_message('user'):
-    #     st.markdown(question)
+    # Display user message in chat_message container
     st.chat_message(name='user', avatar='👨‍💼').markdown(question)
     # Add user message to chat history
     st.session_state.messages.append({'role': 'user', 'content': question, 'avatar': '👨‍💼'})
 
-    # Generating response streaming words
-    #result = st.write_stream(generate_fake_response(question))
-
-    # Display H.O.L.M.E.S. response in chat_message container
+    # Display H.O.L.M.E.S. response in chat_message container, streaming words
     # st.chat_message(name='assistant', avatar='🕵️‍♂️').markdown(result)
     with st.chat_message(name='assistant', avatar='🕵️‍♂️'):
-        result = st.write_stream(generate_fake_response(question))
+        result = st.write_stream(generate_response(question))
     # Add H.O.L.M.E.S. response to chat history
     st.session_state.messages.append({'role': 'assistant', 'content': result, 'avatar': '🕵️‍♂️'})
     
@@ -235,8 +224,6 @@ if question := st.chat_input(placeholder='Ex: "O que significa a sigla APU?"', m
 # Answer space
 if question:
     answer_space = st.empty()
-
-    
     # Generate Answer running the chain
     # result = generate_response(question)
     # result = generate_fake_response(question)
@@ -246,14 +233,17 @@ if question:
 
     # Mock questions
     questions = [
-        'O que significa a sigla EPEP?',
-        'O que faz a transação ME22N?',
-        'Qual transação posso usar para modificar a Ordem de Cliente (OV/SO)?',
+        'O que é o AHEAD?',
+        'O que significa MTBF?',
+        'Onde ficam os KPIs da área?',
+        'Quais são as aeronaves Embraer?',
         'O que significa APU?',
+        'Por que eu devo evitar fazer críticas em público?',
+        'O que é a matriz GUT?',
+
         'Quais são os processos P3E?',
         'Qual é o ramal do Diego Sodre?',
         'Qual é a chapa do Diego Sodre?',
         'Qual é o ramal do ambulatório?',
-        'Quais são algumas das regras para uma boa convivência com os  colegas?',
-        'Por que eu devo evitar fazer críticas em público?'
+        'Quais são algumas das regras para uma boa convivência com os  colegas?'
     ]

@@ -162,8 +162,8 @@ def generate_response(question):
     return answer
 
 def generate_fake_response(question):
-    empty = st.empty()
-    with empty.container():
+    empty_space = st.empty()
+    with empty_space.container():
 
         with st.status('Generating response...', expanded=False) as status:
 
@@ -172,7 +172,7 @@ def generate_fake_response(question):
             status.update(
                 label='Response Generated!', state='complete', expanded=None
             )
-    empty.empty()
+    empty_space.empty()
 
     for word in fake_answer.split():
         yield word + " "
@@ -184,9 +184,13 @@ def generate_fake_response(question):
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 
+# Messages history container
+#chat_history = st.container(height=200, border=False)
+
+#with chat_history:
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
+    with st.chat_message(name=message["role"], avatar=message['avatar']):
         st.markdown(message["content"])
 
 # def capitalize_first_word():
@@ -215,7 +219,7 @@ if question := st.chat_input(placeholder='Ex: "O que significa a sigla APU?"', m
     #     st.markdown(question)
     st.chat_message(name='user', avatar='👨‍💼').markdown(question)
     # Add user message to chat history
-    st.session_state.messages.append({'role': 'user', 'content': question})
+    st.session_state.messages.append({'role': 'user', 'content': question, 'avatar': '👨‍💼'})
 
     # Generating response streaming words
     #result = st.write_stream(generate_fake_response(question))
@@ -225,7 +229,7 @@ if question := st.chat_input(placeholder='Ex: "O que significa a sigla APU?"', m
     with st.chat_message(name='assistant', avatar='🕵️‍♂️'):
         result = st.write_stream(generate_fake_response(question))
     # Add H.O.L.M.E.S. response to chat history
-    st.session_state.messages.append({'role': 'assistant', 'content': result})
+    st.session_state.messages.append({'role': 'assistant', 'content': result, 'avatar': '🕵️‍♂️'})
     
 
 # Answer space
@@ -253,10 +257,3 @@ if question:
         'Quais são algumas das regras para uma boa convivência com os  colegas?',
         'Por que eu devo evitar fazer críticas em público?'
     ]
-
-    # for question in questions:
-    #     resposta = generate_response(question)
-    #     st.info('Question:\n'+question)
-    #     print('\n')
-    #     st.info('Answer:\n'+resposta)
-    #     print('\n')

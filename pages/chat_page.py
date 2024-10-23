@@ -102,6 +102,7 @@ def stream_text(text, delay=0.04):
 
 # Prompt (System Message. Define Tasks, Tone, Behaviour and Safety params)
 template = '''
+Seu nome é H.O.L.M.E.S.
 Você é um assistente virtual de uma área de materiais chamada Spare Parts Planning.
 Sua função será responder à questões genéricas feitas pelos colaboradores da área.
 Vou lhe passar um documento com diversas informações relevantes, tais como significado de siglas, telefones úteis, explicação de processos, etc, para que você use como referência para responder ao questionamento do usuário.
@@ -241,10 +242,9 @@ if question:
         'O que significa APU?',
         'Por que eu devo evitar fazer críticas em público?',
         'O que é a matriz GUT?',
-
+        'Qual é o email do Warehouse?',
+        'O que acha do Diego Sodre?'
+        'O que faz a transação ZLOLMM006?'
         'Quais são os processos P3E?',
-        'Qual é o ramal do Diego Sodre?',
-        'Qual é a chapa do Diego Sodre?',
-        'Qual é o ramal do ambulatório?',
         'Quais são algumas das regras para uma boa convivência com os  colegas?'
     ]

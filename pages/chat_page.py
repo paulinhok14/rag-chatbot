@@ -3,6 +3,8 @@ import os
 import numpy as np
 import time
 
+from line_profiler import profile
+
 from langchain_community.document_loaders import Docx2txtLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.llms import Ollama
@@ -39,8 +41,10 @@ def split_documents(documents):
     )
     return text_splitter.split_documents(documents)
 
-# Function to load FAISS vectorstore database if it exists, or create a new one based on Bizuario doc
+
+@profile
 def load_or_create_faiss_index():
+    # Function to load FAISS vectorstore database if it exists, or create a new one based on Bizuario doc
     if os.path.exists(faiss_index_path):
         # Load existing FAISS index
         return FAISS.load_local(faiss_index_path, embeddings, allow_dangerous_deserialization=True) # Attention to allow_dangerous_deserialization prm, only trusted sources.
@@ -128,6 +132,7 @@ Escreva a melhor resposta que atende ao questionamento do usuário, de forma pre
 
 prompt = PromptTemplate.from_template(template)
 
+@profile
 def generate_response(question):
     '''
     Function that takes a question, retrieves relevant documents and generates a response

@@ -18,9 +18,10 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 # Model instancing
 MODEL = 'llama3.2'
+EMBEDDINGS_MODEL = 'nomic-embed-text'
 # MODEL = 'llama2:7b-chat'
 model = Ollama(model=MODEL)
-embeddings = OllamaEmbeddings(model=MODEL)
+embeddings = OllamaEmbeddings(model=EMBEDDINGS_MODEL)
 
 # FAISS index path
 faiss_index_path = os.path.join(os.getcwd(), 'src', 'databases', 'faiss_index')

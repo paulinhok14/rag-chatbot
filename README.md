@@ -47,17 +47,15 @@ The system's **huge scalability potential** lies in the simplicity of changing a
 
 All this while maintaining a cohesive structure (LangChain) connected to the system's main objectives.
 
-The system's user interface runs on a web application and once the address is accessed, the server will respond by directing to H.O.L.M.E.S. main page, the **Chat** page:
+The system's user interface runs on a web application and once the address is accessed, the server will respond by directing to H.O.L.M.E.S. main page, the **Chat** page. 
 
-![holmes chat page](docs/1_holmes_chat.png)
+See below **H.O.L.M.E.S.** in action!
+
+https://github.com/user-attachments/assets/98db4d57-32e1-4782-9275-2a0bba804f78
 
 Accessed via the sidebar is the **About** page that describes how the system works and its structure.
 
 ![holmes about page](docs/2_holmes_about.png)
-
-Below you can see an example of a business-relevant question being made by an user (regarding APU component), and after a while investigating in knowledge base, **H.O.L.M.E.S.** returns a correct answer, adding cordial and caring words to the relevant answer.
-
-![holmes answering](docs/4_holmes_at_work.png)
 
 The next steps will be to evaluate the feasibility of adding new documents as sources of information to the knowledge base, and also of improving the quality of the system by upgrading the models to other higher quality models (LLM/Chat and Embeddings), usually paid for.
 

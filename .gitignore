@@ -5,6 +5,7 @@ __pycache__/
 
 # Custom Files
 ./src/databases/Bizuario Geral.docx
+sequential_dev.ipynb
 
 # C extensions
 *.so

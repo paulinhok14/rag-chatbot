@@ -40,7 +40,7 @@ Initially, the choice was made for **free open-source LLM models** running local
 
 **Host: Ollama (Local)**<br>
 **LLM: llama3.2 w/ 2B parameters (Meta)**<br>
-**Embeddings: llama3.2 (Meta)**<br>
+**Embeddings: nomic-embed-text**<br>
 **Vector Store: FAISS - Facebook AI Similarity Search (Meta)**<br><br>
 
 The system's **huge scalability potential** lies in the simplicity of changing and improving the structure to use **more robust models** (such as GPT-4, Gemini, etc.) by investing amounts that may be insignificant compared to the potential return, **adding different supported knowledge base formats**: **PDF, Word, SharePoint, Excel spreadsheets, XML, TXT documents, databases**, in addition to directly benefiting from the **natural evolution of open-source LLM/Chat models**.
@@ -65,7 +65,7 @@ The next steps will be to evaluate the feasibility of adding new documents as so
   <img width="40" height="40" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original-wordmark.svg" />
   <img width="40" height="40" src="https://img.utdstc.com/icon/6f9/ee0/6f9ee044146aecfd841c98f2a270d996b3e33440142456b9b4349c8bc681857c:200" />
   <img width="40" height="40" src="https://future-coders.net/wp-content/uploads/2023/11/langchianlogo.png" />
-  <img width="72" height="40" src="https://static1.anpoimages.com/wordpress/wp-content/uploads/2024/01/the-meta-logo-appears-on-a-white-background.jpg" />
+  <img width="72" height="40" src="https://docs.nomic.ai/img/nomic-logo.png" />
   <img width="68" height="40" src="https://streamlit.io/images/brand/streamlit-logo-secondary-colormark-darktext.png" />
 </div>
 

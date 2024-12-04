@@ -67,6 +67,7 @@ The next steps will be to evaluate the feasibility of adding new documents as so
   <img width="40" height="40" src="https://future-coders.net/wp-content/uploads/2023/11/langchianlogo.png" />
   <img width="72" height="40" src="https://docs.nomic.ai/img/nomic-logo.png" />
   <img width="68" height="40" src="https://streamlit.io/images/brand/streamlit-logo-secondary-colormark-darktext.png" />
+  <img width="46" height="40" src="https://logopng.com.br/logos/docker-27.png" />  
 </div>
 
 
